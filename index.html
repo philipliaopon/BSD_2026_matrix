@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 Strategy Execution Hub - Editable Edition V12.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --color-bg: #f0f9ff;      
+            --color-card: #ffffff;    
+            --color-text-main: #0f172a; 
+            --color-text-sub: #334155;  
+            --color-accent: #7dd3fc;    
+            --color-accent-text: #0284c7; 
+            --color-accent-light: #e0f2fe; 
+            --color-border: #bae6fd;    
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei UI', 'Microsoft JhengHei', 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--color-bg);
+            background-image: radial-gradient(#bae6fd 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--color-text-main);
+            margin: 0;
+            overflow-x: hidden;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        /* Container wrappers to manage layout */
+        #matrix-section {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        #table-section {
+            display: none;
+            min-height: 100vh;
+            width: 100vw;
+            background: white;
+            padding: 4rem 8vw;
+            box-shadow: 0 -10px 25px -5px rgba(0,0,0,0.05);
+            border-top: 1px solid var(--color-border);
+        }
+
+        /* --- Main App Container (Matrix) --- */
+        #app-container {
+            width: 100vw;
+            height: 56.25vw;
+            max-height: 100vh;
+            max-width: 177.78vh;
+            padding: 1rem; 
+            display: grid;
+            grid-template-columns: 1fr 35px 1fr; 
+            grid-template-rows: 70px 30px 1fr 1fr 20px; 
+            gap: 0.75rem; 
+            box-sizing: border-box;
+        }
+
+        .bento-card {
+            background-color: var(--color-card);
+            border-radius: 0.75rem; 
+            padding: 1rem; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden; 
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(12, 74, 110, 0.05);
+        }
+
+        .bento-card:hover {
+            border-color: var(--color-accent);
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 15px 25px -5px rgba(12, 74, 110, 0.15);
+        }
+
+        .bento-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--color-accent) 0%, #38bdf8 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .bento-card:hover::before { opacity: 1; }
+
+        .accent-text { color: var(--color-accent-text); }
+        .sub-text { color: var(--color-text-sub); }
+
+        /* Axis Labels Styling */
+        .axis-header-x, .axis-header-y {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: white; 
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .axis-header-x:hover, .axis-header-y:hover {
+            opacity: 0.9;
+            transform: scale(1.01);
+        }
+
+        .axis-header-y {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+
+        /* Differentiated Axis Colors */
+        .axis-sales { background-color: #3b82f6; }
+        .axis-marcom { background-color: #f43f5e; }
+        .axis-external { background-color: #0d9488; }
+        .axis-internal { background-color: #6366f1; }
+
+        .title-main { font-size: 1.7rem; font-weight: 800; color: var(--color-text-main); line-height: 1.1; cursor: pointer; transition: color 0.2s;}
+        .title-main:hover { color: var(--color-accent-text); }
+        
+        .title-quadrant { 
+            font-size: 1.2rem; 
+            font-weight: 800; 
+            margin-bottom: 0.2rem; 
+            color: var(--color-text-main); 
+            line-height: 1.2; 
+        }
+        
+        .subtitle-quadrant { 
+            font-size: 0.85rem; 
+            font-weight: 600; 
+            margin-bottom: 0.5rem; 
+            color: var(--color-text-sub); 
+            line-height: 1.3; 
+        } 
+        
+        .card-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+        }
+        
+        .section-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 800;
+            color: #64748b;
+            margin-bottom: 0.25rem; 
+            display: block;
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.3rem;
+        }
+
+        .bullet-point { 
+            margin-bottom: 0.4rem; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-start;
+            padding: 3px 0; 
+        }
+
+        .bullet-text {
+            font-size: 0.85rem; 
+            font-weight: 700;   
+            line-height: 1.4;   
+            color: #0f172a;     
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal; 
+            width: 100%;
+        }
+        
+        .bullet-deliverable {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-top: 2px;
+            font-style: italic;
+            word-wrap: break-word;
+            white-space: normal; 
+            width: 100%;
+            padding-left: 0.5rem;
+            border-left: 2px solid var(--color-border);
+        }
+
+        .owner-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .owner-badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.1s ease;
+            user-select: none;
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            border-color: #e2e8f0;
+        }
+
+        .owner-badge:hover {
+            background-color: #e2e8f0;
+            color: #64748b;
+        }
+        
+        .owner-badge.active-PL { background-color: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+        .owner-badge.active-Shawn { background-color: #f0fdfa; color: #0d9488; border-color: #99f6e4; }
+        .owner-badge.active-Tinny { background-color: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+
+        /* --- Distinct Tag Coloring --- */
+        .tag-container { display: flex; gap: 6px; margin-bottom: 0.4rem; }
+
+        .tag {
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.3rem;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            display: inline-block;
+            color: white; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .tag-sales { background-color: #3b82f6; }
+        .tag-marcom { background-color: #f43f5e; }
+        .tag-external { background-color: #0d9488; }
+        .tag-internal { background-color: #6366f1; }
+
+        .core-quadrant { border: 2px solid var(--color-accent); background-color: #f0f9ff; }
+
+        /* --- UI Controls --- */
+        .actions-container { position: absolute; top: 1.5rem; right: 12rem; display: flex; gap: 0.5rem; z-index: 50; }
+        .action-btn { background: white; border: 1px solid var(--color-border); border-radius: 9999px; padding: 0.4rem 0.8rem; font-weight: 700; font-size: 0.8rem; cursor: pointer; color: var(--color-text-sub); box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s; display: flex; align-items: center; gap: 0.3rem; }
+        .action-btn:hover { border-color: var(--color-accent); color: var(--color-text-main); background-color: var(--color-accent-light); }
+        
+        .table-btn { background-color: var(--color-text-main); color: white; border: none; }
+        .table-btn:hover { background-color: black; color: white; }
+        
+        .gdocs-btn { background-color: #1a73e8; color: white; border: none; }
+        .gdocs-btn:hover { background-color: #174ea6; color: white; }
+
+        .lang-toggle { position: absolute; top: 1.5rem; right: 2rem; background: white; border: 1px solid var(--color-border); border-radius: 9999px; padding: 0.4rem 0.8rem; font-weight: 700; font-size: 0.8rem; cursor: pointer; color: var(--color-text-sub); box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s; z-index: 50; display: flex; align-items: center; gap: 0.5rem; }
+        .lang-toggle:hover { border-color: var(--color-accent); color: var(--color-text-main); }
+
+        /* --- SCALED UP OVERLAY MODAL --- */
+        #overlay-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 99;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #detail-popup {
+            display: none;
+            position: fixed; 
+            z-index: 100;
+            background: white;
+            border: 1px solid var(--color-border);
+            border-radius: 1.2rem;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            
+            top: 50%;
+            left: 50%;
+            width: 85vw;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            
+            transform: translate(-50%, -45%) scale(0.95);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: auto;
+        }
+
+        #detail-popup.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        #detail-popup.small-modal { width: 400px; max-width: 90vw; padding: 1.5rem; }
+
+        .popup-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+        .popup-close-btn { background: #f1f5f9; border: none; color: #475569; cursor: pointer; padding: 8px; border-radius: 50%; font-size: 1.2rem; line-height: 1; margin-left: 0.5rem; transition: background 0.2s; }
+        .popup-close-btn:hover { background-color: #e2e8f0; color: #0f172a; }
+
+        .btn-edit { font-size: 0.85rem; padding: 0.4rem 1rem; border-radius: 9999px; background-color: var(--color-accent-light); color: var(--color-accent-text); font-weight: 700; border: 1px solid transparent; cursor: pointer; transition: all 0.2s; }
+        .btn-edit:hover { border-color: var(--color-accent); background-color: white; }
+        .btn-save { background-color: var(--color-text-main); color: white; }
+        .btn-save:hover { background-color: black; }
+
+        /* Inside Scaled View */
+        .scaled-title { font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem; line-height: 1.2;}
+        .scaled-sub { font-size: 1.1rem; font-weight: 600; color: #475569; margin-bottom: 1.5rem; border-bottom: 2px solid var(--color-border); padding-bottom: 1rem;}
+        .scaled-bullet-container { background: #f8fafc; padding: 1.5rem; border-radius: 1rem; border: 1px solid #e2e8f0; }
+        .scaled-bullet { font-size: 1.05rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; word-wrap: break-word; white-space: normal; line-height: 1.4;}
+        
+        .edit-grid { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 1rem; align-items: start; }
+        .edit-col h4 { font-size: 0.9rem; font-weight: 800; color: var(--color-text-sub); margin-bottom: 0.5rem; text-transform: uppercase; border-bottom: 2px solid var(--color-border); padding-bottom: 0.25rem;}
+        
+        .sync-controls { display: flex; flex-direction: column; gap: 0.5rem; justify-content: center; align-items: center; padding-top: 2rem; }
+        .btn-sync { width: auto; padding: 6px 10px; border-radius: 6px; background: var(--color-accent-light); color: var(--color-text-sub); border: 1px solid var(--color-border); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 10px; font-weight: 700; }
+        .btn-sync:hover { background: var(--color-text-sub); color: white; }
+
+        .edit-input, .edit-input-sub { width: 100%; border: 2px solid var(--color-border); border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-family: inherit; outline: none; margin-bottom: 0.75rem; }
+        .edit-input { font-size: 1.1rem; font-weight: 800; color: var(--color-text-main); }
+        .edit-input-sub { font-size: 0.95rem; font-weight: 600; color: var(--color-text-sub); }
+
+        .edit-textarea { width: 100%; min-height: 100px; border: 2px solid var(--color-border); border-radius: 0.5rem; padding: 0.75rem; font-family: inherit; font-size: 0.9rem; font-weight: 600; color: var(--color-text-main); resize: vertical; outline: none; line-height: 1.5; }
+        #edit-textarea-en, #edit-deliverables-en { background-color: #f0f9ff; border-color: #bae6fd; }
+        #edit-textarea-zh, #edit-deliverables-zh { background-color: #fff1f2; border-color: #fecdd3; }
+        .edit-textarea:focus, .edit-input:focus { border-color: var(--color-accent-text); box-shadow: 0 0 0 3px var(--color-accent-light); }
+        
+        /* --- ACTION PLAN TABLE STYLES --- */
+        .plan-table { width: 100%; border-collapse: collapse; margin-top: 1rem; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .plan-table th { background-color: #f8fafc; text-align: left; padding: 12px 16px; font-size: 0.85rem; font-weight: 800; color: #475569; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
+        .plan-table td { padding: 14px 16px; font-size: 0.95rem; color: #0f172a; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        .plan-table tr.data-row:hover td { background-color: #f0f9ff; }
+        
+        .col-task { width: 35%; font-weight: 700; }
+        .col-deliv { width: 35%; font-style: italic; color: #475569; }
+        .col-owner { width: 12%; }
+        .col-tags { width: 18%; }
+        
+        .editable-cell { padding: 4px; border-radius: 4px; border: 1px solid transparent; transition: all 0.2s; min-height: 24px; }
+        .editable-cell:hover { border-color: #bae6fd; background: rgba(255,255,255,0.8); }
+        .editable-cell:focus { outline: none; border-color: #0284c7; background: #fff; box-shadow: 0 0 0 2px #e0f2fe; }
+
+        .tag-pill { display: inline-flex; align-items: center; gap: 4px; background-color: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 9999px; font-size: 0.7rem; font-weight: 800; box-shadow: 0 1px 2px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
+        .tag-pill:hover { background-color: #fecdd3; color: #be123c; }
+
+        .tag-input { width: 100%; padding: 6px 8px; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 0.75rem; font-family: inherit; color: #0f172a; font-weight: 600; outline: none; transition: all 0.2s; background: transparent; }
+        .tag-input:focus { border-style: solid; border-color: var(--color-accent-text); background: #fff; }
+
+        /* --- DEDICATED PRINT CONTAINER & MODES --- */
+        #print-container { display: none; padding: 40px; box-sizing: border-box; background: white; width: 100%; position: fixed; top: 0; left: 0; z-index: -100; }
+        body.is-printing { overflow: visible !important; height: auto !important; display: block !important; background: white !important; }
+        body.is-printing #matrix-section, body.is-printing #table-section, body.is-printing .actions-container, body.is-printing .lang-toggle, body.is-printing #detail-popup, body.is-printing #overlay-backdrop, body.is-printing #export-loading { display: none !important; }
+        body.is-printing #print-container { display: block !important; position: static !important; z-index: 9999 !important; }
+
+        .print-layout { display: flex; flex-direction: column; gap: 15px; max-width: 1100px; margin: 0 auto; font-family: 'Microsoft JhengHei UI', sans-serif;}
+        .print-header { text-align: center; margin-bottom: 10px; border-bottom: 3px solid var(--color-text-main); padding-bottom: 15px; }
+        .print-header h1 { font-size: 26pt; color: var(--color-text-main); font-weight: 900; margin: 0 0 5px 0; }
+        .print-header p { font-size: 14pt; color: var(--color-text-sub); font-weight: 600; margin: 0; }
+        .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .print-card { border: 2px solid #e2e8f0; border-radius: 10px; padding: 20px; background: #fff; break-inside: avoid; }
+        .print-card h2 { font-size: 16pt; font-weight: 900; color: var(--color-text-main); margin: 5px 0; }
+        .print-tag { font-size: 9pt; font-weight: 800; color: #fff; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-right: 5px; margin-bottom: 8px; text-transform: uppercase; }
+        .print-card p { font-size: 11pt; color: var(--color-text-sub); font-weight: 600; margin-bottom: 15px; }
+        .print-card ul { list-style: none; padding: 0; margin: 0; }
+        .print-card li { font-size: 11pt; font-weight: 700; margin-bottom: 12px; color: #0f172a; padding-left: 0; line-height: 1.4; display:flex; flex-direction:column; align-items:flex-start; word-wrap: break-word;}
+        .print-deliv { font-size: 9pt; font-weight: 600; color: #64748b; font-style: italic; margin-top: 2px; border-left: 2px solid #cbd5e1; padding-left: 6px;}
+        
+        .print-owner-row { display: flex; gap: 4px; margin-top: 4px; }
+        .print-owner { font-size: 8pt; padding: 2px 6px; border-radius: 4px; font-weight: 800; border: 1px solid #ddd; }
+        .print-owner.active-PL { background-color: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+        .print-owner.active-Shawn { background-color: #f0fdfa; color: #0d9488; border-color: #99f6e4; }
+        .print-owner.active-Tinny { background-color: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+
+        .print-footer { margin-top: 20px; text-align: right; font-size: 9pt; font-weight: 600; color: #64748b; border-top: 2px solid #e2e8f0; padding-top: 10px; }
+
+        /* Print Table Styles */
+        .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-family: 'Microsoft JhengHei UI', sans-serif; page-break-inside: auto;}
+        .print-table tr { page-break-inside: avoid; page-break-after: auto; }
+        .print-table th, .print-table td { border: 1px solid #ccc; padding: 10px; font-size: 10pt; text-align: left; vertical-align: top; }
+        .print-table th { background-color: #f0f4f8; font-weight: bold; color: #334155; }
+        .print-table-tag { display: inline-block; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 8pt; font-weight: bold; margin-bottom: 2px;}
+
+        #export-loading { position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 99999; display: none; justify-content: center; align-items: center; font-weight: 800; color: var(--color-text-main); font-size: 1.5rem; }
+
+    </style>
+</head>
+<body>
+
+    <div id="export-loading">Generating Document...</div>
+    <div id="print-container"></div>
+
+    <div class="actions-container" data-html2canvas-ignore="true">
+        <button class="action-btn table-btn" onclick="toggleTableView()" title="View Detailed Action Plan">
+            📋 Action Plan
+        </button>
+        <button class="action-btn gdocs-btn" onclick="exportGoogleDoc()" title="Export directly to Google Docs">
+            ☁️ Docs
+        </button>
+        <button class="action-btn" onclick="exportPDF()" title="Export as PDF">PDF</button>
+        <button class="action-btn" onclick="exportCSV()" title="Export as CSV">Excel</button>
+    </div>
+
+    <button class="lang-toggle" onclick="toggleLanguage()" data-html2canvas-ignore="true">
+        <span id="lang-label">EN / 中文</span>
+    </button>
+
+    <!-- WRAPPER 1: Matrix View (100vh) -->
+    <div id="matrix-section">
+        <div id="app-container">
+            <!-- HEADER ROW -->
+            <div class="col-span-3 flex items-center pl-2 gap-6">
+                <div class="flex-shrink-0" style="height: 50px; display: flex; align-items: center;">
+                     <svg height="100%" viewBox="0 0 320 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
+                        <path d="M40 5 L10 55 L70 55 Z" fill="black" />
+                        <path d="M10 55 L25 30 L40 55 Z" fill="#D50017" />
+                        <text x="80" y="45" font-family="Arial, sans-serif" font-weight="900" font-size="52" fill="black" letter-spacing="-2">RLITECH</text>
+                    </svg>
+                </div>
+                <div class="flex flex-col justify-center border-l-2 border-slate-300 pl-6 h-full">
+                    <h1 class="title-main" data-key="mainTitle" onclick="openEditModal('mainTitle', event)">2026 BSD <span class="accent-text">Strategy Matrix</span></h1>
+                    <p class="sub-text text-lg font-medium" data-key="subTitle" onclick="openEditModal('subTitle', event)">Objectives Alignment with TOP</p>
+                </div>
+            </div>
+            
+            <!-- ROW 2: X-Axis -->
+            <div class="axis-header-x axis-sales" data-key="axisSales" onclick="openEditModal('axisSales', event)">← Drive: Sales (Revenue) →</div>
+            <div></div> <!-- Spacer for intersection -->
+            <div class="axis-header-x axis-marcom" data-key="axisMarcom" onclick="openEditModal('axisMarcom', event)">← Drive: Marcom (Engagement) →</div>
+
+            <!-- ROW 3: Top Quadrants -->
+            <div class="bento-card" id="card-q1" onclick="expandQuadrant('q1')">
+                <div class="tag-container">
+                    <span class="tag tag-sales">Sales</span>
+                    <span class="tag tag-external">External</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="title-quadrant" data-key="q1Title">New Biz Opportunities</h2>
+                    <p class="subtitle-quadrant" data-key="q1Sub">Accelerate Revenue & Market Penetration</p>
+                    <span class="section-label" data-key="lblActivities">Key Activities</span>
+                    <div id="q1-bullets"></div>
+                </div>
+            </div>
+
+            <div class="axis-header-y axis-external" data-key="axisExternal" onclick="openEditModal('axisExternal', event)">Focus: External (Market Visibility)</div>
+
+            <div class="bento-card" id="card-q2" onclick="expandQuadrant('q2')">
+                <div class="tag-container">
+                    <span class="tag tag-marcom">Marcom</span>
+                    <span class="tag tag-external">External</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="title-quadrant" data-key="q2Title">Marketing & MQLs</h2>
+                    <p class="subtitle-quadrant" data-key="q2Sub">Online/offline Events & Maximize Leads</p>
+                    <span class="section-label" data-key="lblActivities">Key Activities</span>
+                    <div id="q2-bullets"></div>
+                </div>
+            </div>
+
+            <!-- ROW 4: Bottom Quadrants -->
+            <div class="bento-card" id="card-q3" onclick="expandQuadrant('q3')">
+                <div class="tag-container">
+                    <span class="tag tag-sales">Sales</span>
+                    <span class="tag tag-internal">Internal</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="title-quadrant" data-key="q3Title">Seeding & Incubation</h2>
+                    <p class="subtitle-quadrant" data-key="q3Sub">Opportunity Pipeline & Incubation</p>
+                    <span class="section-label" data-key="lblActivities">Key Activities</span>
+                    <div id="q3-bullets"></div>
+                </div>
+            </div>
+
+            <div class="axis-header-y axis-internal" data-key="axisInternal" onclick="openEditModal('axisInternal', event)">Focus: Internal (Capability)</div>
+
+            <div class="bento-card core-quadrant" id="card-q4" onclick="expandQuadrant('q4')">
+                <div class="tag-container">
+                    <span class="tag tag-marcom">Marcom</span>
+                    <span class="tag tag-internal">Internal</span>
+                </div>
+                <div class="card-content">
+                    <h2 class="title-quadrant" data-key="q4Title">GEO & Corp. Assets</h2>
+                    <p class="subtitle-quadrant" data-key="q4Sub">GEO/SEO & Corp. Asset Utilization</p>
+                    <span class="section-label" data-key="lblActivities">Key Activities</span>
+                    <div id="q4-bullets"></div>
+                </div>
+            </div>
+
+            <!-- FOOTER ROW -->
+            <div class="col-span-3 flex items-center justify-end px-2 text-xs text-slate-500 border-t-2 border-slate-200 pt-2 font-bold">
+                <div data-key="footerCopy">© 2026 BSD Strategic Management Hub V12.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WRAPPER 2: Table View (Below the fold) -->
+    <div id="table-section">
+        <div class="flex justify-between items-end mb-6 border-b-2 border-slate-900 pb-4">
+            <div>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight">Strategy Action Plan</h2>
+                <p class="text-slate-500 font-semibold mt-1">Directly edit tasks, deliverables, and tags below. Changes sync automatically.</p>
+            </div>
+            <button onclick="toggleTableView()" class="text-sky-600 hover:text-sky-800 font-bold text-sm flex items-center gap-1">
+                ↑ Back to Matrix
+            </button>
+        </div>
+        
+        <table class="plan-table">
+            <thead>
+                <tr>
+                    <th class="col-task">Key Activity</th>
+                    <th class="col-deliv">Target Deliverable</th>
+                    <th class="col-owner">Owners</th>
+                    <th class="col-tags">Execution Tags</th>
+                </tr>
+            </thead>
+            <tbody id="action-plan-tbody">
+                <!-- Injected via JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Backdrop & Overlay Modal -->
+    <div id="overlay-backdrop" onclick="forceClose()"></div>
+    <div id="detail-popup">
+        <div class="popup-header">
+            <div id="popup-tag-container" class="flex gap-2"></div>
+            <div class="flex items-center">
+                <button id="btn-edit-mode" class="btn-edit" onclick="toggleEditMode()">✎ Edit Content</button>
+                <button class="popup-close-btn" onclick="forceClose()">✕</button>
+            </div>
+        </div>
+        
+        <!-- View / Expanded Mode Content -->
+        <div id="popup-content"></div>
+        
+        <!-- Text Editor Mode Content -->
+        <div id="popup-edit-ui" style="display:none;">
+            <span class="helper-text font-bold" id="edit-helper-text">Edit activity and deliverable items. Auto-Translate is active.</span>
+            
+            <div class="edit-grid">
+                <div class="edit-col">
+                    <h4>English</h4>
+                    <input type="text" id="edit-title-en" class="edit-input" placeholder="Title" oninput="handleInput('en')">
+                    <input type="text" id="edit-sub-en" class="edit-input-sub" placeholder="Subtitle" oninput="handleInput('en')">
+                    
+                    <div class="mt-4">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Activities (One per line)</label>
+                            <button class="text-xs text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 transition-colors" onclick="aiRefineActivities('en')" title="Use AI to polish and rewrite activities">✨ Refine</button>
+                        </div>
+                        <textarea id="edit-textarea-en" class="edit-textarea mt-1" placeholder="Activity 1&#10;Activity 2" oninput="handleInput('en')"></textarea>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Deliverables (Mapped to activities)</label>
+                            <button class="text-xs text-fuchsia-600 hover:text-fuchsia-800 font-bold flex items-center gap-1 transition-colors" onclick="aiGenerateDeliverables('en')" title="Use AI to generate deliverables based on activities">✨ Auto-Generate</button>
+                        </div>
+                        <textarea id="edit-deliverables-en" class="edit-textarea mt-1" placeholder="Deliverable 1&#10;Deliverable 2" oninput="handleInput('en')"></textarea>
+                    </div>
+                </div>
+                <div class="sync-controls">
+                    <button class="btn-sync" onclick="triggerTranslation('en', 'zh')" title="Translate to Chinese">Translate<br>→ </button>
+                    <button class="btn-sync" onclick="triggerTranslation('zh', 'en')" title="Translate to English">←<br>Translate </button>
+                </div>
+                <div class="edit-col">
+                    <h4>中文 (Chinese)</h4>
+                    <input type="text" id="edit-title-zh" class="edit-input" placeholder="標題" oninput="handleInput('zh')">
+                    <input type="text" id="edit-sub-zh" class="edit-input-sub" placeholder="副標題" oninput="handleInput('zh')">
+                    
+                    <div class="mt-4">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">活動項目 (每行一項)</label>
+                            <button class="text-xs text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 transition-colors" onclick="aiRefineActivities('zh')" title="使用 AI 潤飾並重寫活動">✨ Refine</button>
+                        </div>
+                        <textarea id="edit-textarea-zh" class="edit-textarea mt-1" placeholder="活動 1&#10;活動 2" oninput="handleInput('zh')"></textarea>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">交付物 (對應上方活動)</label>
+                            <button class="text-xs text-fuchsia-600 hover:text-fuchsia-800 font-bold flex items-center gap-1 transition-colors" onclick="aiGenerateDeliverables('zh')" title="使用 AI 根據活動生成交付物">✨ Auto-Generate</button>
+                        </div>
+                        <textarea id="edit-deliverables-zh" class="edit-textarea mt-1" placeholder="交付物 1&#10;交付物 2" oninput="handleInput('zh')"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mt-4 pt-4 border-t border-slate-200">
+                <div class="flex items-center">
+                    <span id="save-status" class="text-sm text-gray-500 italic font-bold"></span>
+                    <label class="auto-sync-label text-sm ml-4">
+                        <input type="checkbox" id="auto-translate-check" checked class="mr-1"> Auto-Translate
+                    </label>
+                </div>
+                <div class="flex gap-3">
+                    <button class="btn-edit reset-btn" onclick="resetToDefault()">Reset</button>
+                    <button class="btn-edit" onclick="revertEdit()">Cancel</button>
+                    <button class="btn-edit btn-save" onclick="forceClose()">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        // USER INSTRUCTION: Paste your Google Apps Script Web App URL below
+        const GOOGLE_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzEqtjSYK0q8UImSHJYPuAAnhWjKLF6Xgy1Je17rsEawxxtE2nifdwPG6NXK08ZUncnvg/exec";
+
+        // --- Data Management V12.0 ---
+        const defaultContentData = {
+            en: {
+                mainTitle: '2026 BSD <span class="accent-text">Strategy Matrix</span>',
+                subTitle: 'Objectives Alignment with Top',
+                axisSales: '← Drive: Sales (Revenue) →',
+                axisMarcom: '← Drive: Marcom (Engagement) →',
+                axisExternal: 'Focus: External (Market Visibility)',
+                axisInternal: 'Focus: Internal (Capability)',
+                lblActivities: 'Key Activities',
+                
+                q1Title: 'New business development (outreach)',
+                q1Sub: 'Revenue growth and new market Engagement',
+                q2Title: 'Marketing & MQLs',
+                q2Sub: 'Online/offline Events & Maximize Leads',
+                q3Title: 'Seeding & Incubation',
+                q3Sub: 'Opportunity Pipeline & Incubation',
+                q4Title: 'GEO & Corp. Assets',
+                q4Sub: 'GEO/SEO & Corp. Asset Utilization',
+                
+                footerCopy: '© 2026 BSD Strategy Hub V12.0',
+                bullets: {
+                    q1: [
+                        "#Noxxen (Singapore) Landing & Entity ACRA Registration", 
+                        "#High Value Tier 1 Customer Penetration (HPC/Graphics)", 
+                        "#S.G Bid Platform Reinforcement"
+                    ],
+                    q2: ["Event Planning", "Global Webinars & Whitepapers (ex: Vcore/VRM or Semicon_Hall/TMR/Multi-Connection)"],
+                    q3: ["Seed Opp. Nurturing (at least 6 months Pipeline)", "1 Million Game: Crowd-Funding, Buy & Sell Practice", "Optimization of AP Operation Hub"],
+                    q4: ["GEO/SEO Optimization", "Marcom Material Production", "Centralized Digital Asset Library"]
+                },
+                deliverables: {
+                    q1: ["Official ACRA Registration & Landing Site Live", "At least 1 POC/Design-in Project", "Fully functional SG Tender portal"],
+                    q2: ["Event Execution Report & Lead List", "Whitepapers & Webinar or Roadshow"],
+                    q3: ["CRM Tracker Updated", "Campaign ROI & Practice Report", "Ops SOP Document"],
+                    q4: ["1st Page Ranking", "Marketing Collateral Pack", "Digi-Asset Portal"]
+                }
+            },
+            zh: {
+                mainTitle: '2026 BSD <span class="accent-text">戰略矩陣</span>',
+                subTitle: '目標對齊',
+                axisSales: '← 驅動力：銷售 (營收驅動) →',
+                axisMarcom: '← 驅動力：行銷 (溝通互動) →',
+                axisExternal: '關注度：外部 (能見度)',
+                axisInternal: '關注度：內部 (企業能力)',
+                lblActivities: '關鍵活動 (Key Activities)',
+                
+                q1Title: '新業務開發 (外擴)',
+                q1Sub: '營收增長與新市場參與',
+                q2Title: '行銷活動 & 流量',
+                q2Sub: '線上/線下活動並極大化潛在客戶',
+                q3Title: '商務種子培育',
+                q3Sub: '業務管道健康度與孵化未來',
+                q4Title: 'GEO 與公司資產',
+                q4Sub: '確保 GEO 曝光與企業資產管理',
+                
+                footerCopy: '© 2026 BSD 戰略管理中心 V12.0',
+                bullets: {
+                    q1: [
+                        "#Noxxen (新加坡) 落地與實體 ACRA 註冊", 
+                        "#高價值 Tier 1 客戶滲透 (HPC/顯示卡)", 
+                        "#新加坡標案平台強化"
+                    ],
+                    q2: ["線上/線下活動規劃", "全球網路研討會與白皮書 (如: Vcore/VRM 或 電競周邊_TMR/多點連接)"],
+                    q3: ["種子商機培育 (至少 6 個月)", "百萬挑戰賽：群眾募資、Amazon實戰", "AP營運中心優化"],
+                    q4: ["GEO/SEO 優化 ", "行銷素材處理", "集中式數位資產圖書館"]
+                },
+                deliverables: {
+                    q1: ["ACRA 註冊證書與官方網站上線", "至少 1 個 POC/Design-in專案", "賽索運營平台MVP"],
+                    q2: ["活動執行報告與潛在客戶名單", "白皮書與研討會結案"],
+                    q3: ["CRM 管線追蹤表更新", "活動ROI報告", "營運中心SOP"],
+                    q4: ["搜尋排名首頁", "行銷素材資源包", "數位資產入口網站上線"]
+                }
+            }
+        };
+
+        const owners = ['P.L', 'Shawn', 'Tinny'];
+        
+        const defaultOwnerData = {
+            "q1-0": ["P.L", "Shawn"],
+            "q1-1": ["P.L", "Shawn"],
+            "q1-2": ["P.L", "Shawn"]
+        };
+
+        let ownerData = {}; 
+        let tagData = {}; 
+        let contentData = null;
+
+        function loadData() {
+            const stored = localStorage.getItem('strategyData_v12_0');
+            if (stored) {
+                try { contentData = JSON.parse(stored); } catch (e) { contentData = JSON.parse(JSON.stringify(defaultContentData)); }
+            } else {
+                const old = localStorage.getItem('strategyData_v11_0');
+                if(old) {
+                    try {
+                        contentData = JSON.parse(old);
+                        contentData.en.footerCopy = '© 2026 BSD Strategy Hub V12.0';
+                        contentData.zh.footerCopy = '© 2026 BSD 戰略管理中心 V12.0';
+                    } catch(e) { contentData = JSON.parse(JSON.stringify(defaultContentData)); }
+                } else {
+                    contentData = JSON.parse(JSON.stringify(defaultContentData));
+                }
+            }
+
+            const storedOwners = localStorage.getItem('strategyOwners_v12_0');
+            if(storedOwners) {
+                try { ownerData = JSON.parse(storedOwners); } catch(e) { ownerData = JSON.parse(JSON.stringify(defaultOwnerData)); }
+            } else {
+                 const oldOwners = localStorage.getItem('strategyOwners_v11_0');
+                 if(oldOwners) {
+                     try { ownerData = JSON.parse(oldOwners); } catch(e) { ownerData = JSON.parse(JSON.stringify(defaultOwnerData)); }
+                 } else {
+                     ownerData = JSON.parse(JSON.stringify(defaultOwnerData));
+                 }
+            }
+
+            const storedTags = localStorage.getItem('strategyTags_v12_0');
+            if(storedTags) {
+                try { tagData = JSON.parse(storedTags); } catch(e) { tagData = {}; }
+            } else {
+                const oldTags = localStorage.getItem('strategyTags_v11_0');
+                if (oldTags) {
+                    try { tagData = JSON.parse(oldTags); } catch(e) { tagData = {}; }
+                } else {
+                    tagData = {}; 
+                }
+            }
+        }
+
+        function saveData() {
+            if (contentData) localStorage.setItem('strategyData_v12_0', JSON.stringify(contentData));
+            localStorage.setItem('strategyOwners_v12_0', JSON.stringify(ownerData));
+            localStorage.setItem('strategyTags_v12_0', JSON.stringify(tagData));
+        }
+        
+        loadData();
+
+        let currentLang = 'en';
+        let currentEditTarget = null; 
+        let currentEditType = null; 
+        let isEditing = false;
+        let originalSessionData = null; 
+        let autoSaveTimeout = null;
+        let translationTimeout = null;
+        let isTableVisible = false;
+
+        const apiKey = ""; 
+
+        async function callGemini(prompt) {
+            if (!apiKey) {
+                alert("Gemini API key is required. Please run this in a supported environment.");
+                return null;
+            }
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: "You are an expert corporate strategist and business planner." }] }
+            };
+
+            let retries = 5;
+            let delay = 1000;
+            while (retries > 0) {
+                try {
+                    const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                } catch (e) {
+                    retries--;
+                    if (retries === 0) return null;
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        async function aiRefineActivities(lang) {
+            const actEl = document.getElementById(`edit-textarea-${lang}`);
+            const activities = actEl.value;
+            if(!activities.trim()) return;
+            const statusEl = document.getElementById('save-status');
+            statusEl.innerText = "✨ AI Refining Activities...";
+            const langName = lang === 'en' ? 'English' : 'Traditional Chinese';
+            const prompt = `Rewrite the following strategic business activities to be more professional, actionable, and concise. Make them sound like high-level corporate strategy goals.\nLanguage to output: ${langName}.\nEnsure the number of lines in your response exactly matches the number of lines in the input.\nDo not include bullet points or numbering, just the raw text.\n\nActivities to refine:\n${activities}`;
+            const result = await callGemini(prompt);
+            if (result) {
+                actEl.value = result.trim();
+                statusEl.innerText = "✨ AI Refinement Complete!";
+                performSave();
+            } else {
+                statusEl.innerText = "⚠️ AI Generation Failed.";
+            }
+        }
+
+        async function aiGenerateDeliverables(lang) {
+            const actEl = document.getElementById(`edit-textarea-${lang}`);
+            const delEl = document.getElementById(`edit-deliverables-${lang}`);
+            const activities = actEl.value;
+            if(!activities.trim()) return;
+            const statusEl = document.getElementById('save-status');
+            statusEl.innerText = "✨ AI Generating Deliverables...";
+            const langName = lang === 'en' ? 'English' : 'Traditional Chinese';
+            const prompt = `Given the following strategic business activities, suggest one highly concrete, tangible, and measurable deliverable for each activity. \nLanguage to output: ${langName}.\nEnsure the number of lines in your response exactly matches the number of lines in the input.\nDo not include bullet points or numbering in your response, just the raw text of the deliverable on each line corresponding to the activity.\n\nActivities:\n${activities}`;
+            const result = await callGemini(prompt);
+            if (result) {
+                delEl.value = result.trim();
+                statusEl.innerText = "✨ AI Generation Complete!";
+                performSave();
+            } else {
+                statusEl.innerText = "⚠️ AI Generation Failed.";
+            }
+        }
+
+        // --- Core Application Logic ---
+
+        function toggleOwner(quadrant, index, ownerName, event) {
+            if(event) event.stopPropagation();
+            const key = `${quadrant}-${index}`;
+            if (!ownerData[key]) ownerData[key] = [];
+            
+            if (ownerData[key].includes(ownerName)) {
+                ownerData[key] = ownerData[key].filter(n => n !== ownerName);
+            } else {
+                ownerData[key].push(ownerName);
+            }
+            saveData();
+            renderContent(); 
+            if (document.getElementById('detail-popup').classList.contains('active') && !isEditing && currentEditType === 'quadrant') {
+                renderOverlayContent(quadrant);
+            }
+        }
+
+        function handleTagKeydown(e, quadrant, index, inputEl) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = inputEl.value.trim();
+                if (val) {
+                    addTag(quadrant, index, val);
+                    inputEl.value = '';
+                }
+            }
+        }
+
+        function addTag(quadrant, index, tagText) {
+            const key = `${quadrant}-${index}`;
+            if (!tagData[key] || typeof tagData[key] === 'string') tagData[key] = []; 
+            if (!tagData[key].includes(tagText)) {
+                tagData[key].push(tagText);
+                saveData();
+                if(isTableVisible) renderTable();
+            }
+        }
+
+        function removeTag(quadrant, index, tagIndex) {
+            const key = `${quadrant}-${index}`;
+            if (tagData[key] && Array.isArray(tagData[key])) {
+                tagData[key].splice(tagIndex, 1);
+                saveData();
+                if(isTableVisible) renderTable();
+            }
+        }
+
+        function updateTableData(quadrant, index, type, newText) {
+            const cleanText = newText.trim();
+            if (type === 'bullet') {
+                contentData[currentLang].bullets[quadrant][index] = cleanText;
+            } else if (type === 'deliverable') {
+                contentData[currentLang].deliverables[quadrant][index] = cleanText;
+            }
+            saveData();
+            renderContent(); 
+        }
+
+        function renderContent() {
+            const data = contentData[currentLang];
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (data[key]) el.innerHTML = data[key];
+            });
+
+            ['q1', 'q2', 'q3', 'q4'].forEach(qid => {
+                const container = document.getElementById(`${qid}-bullets`);
+                container.innerHTML = data.bullets[qid].map((b, index) => {
+                    const key = `${qid}-${index}`;
+                    const activeOwners = ownerData[key] || [];
+                    const d = data.deliverables[qid][index] || '-';
+                    
+                    const badgesHtml = owners.map(o => {
+                        let activeClass = "";
+                        if(activeOwners.includes(o)) {
+                            if(o==='P.L') activeClass = "active-PL";
+                            if(o==='Shawn') activeClass = "active-Shawn";
+                            if(o==='Tinny') activeClass = "active-Tinny";
+                            return `<span class="owner-badge ${activeClass}" onclick="toggleOwner('${qid}', ${index}, '${o}', event)">${o}</span>`;
+                        }
+                        return ''; 
+                    }).join('');
+
+                    return `
+                    <div class="bullet-point">
+                        <div class="bullet-text">• ${b}</div>
+                        <div class="bullet-deliverable">↳ ${d}</div>
+                        <div class="owner-row">${badgesHtml}</div>
+                    </div>
+                `}).join('');
+            });
+
+            if(isTableVisible) renderTable();
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            renderContent();
+            if (document.getElementById('detail-popup').classList.contains('active')) {
+                if(!isEditing && currentEditType === 'quadrant') renderOverlayContent(currentEditTarget);
+            }
+        }
+
+        // --- ACTION PLAN TABLE LOGIC ---
+        function toggleTableView() {
+            const tableSec = document.getElementById('table-section');
+            if(tableSec.style.display === 'none' || tableSec.style.display === '') {
+                tableSec.style.display = 'block';
+                isTableVisible = true;
+                renderTable();
+                tableSec.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                document.getElementById('matrix-section').scrollIntoView({ behavior: 'smooth' });
+                setTimeout(() => { 
+                    tableSec.style.display = 'none'; 
+                    isTableVisible = false;
+                }, 500);
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('action-plan-tbody');
+            let html = '';
+            const data = contentData[currentLang];
+            
+            ['q1', 'q2', 'q3', 'q4'].forEach(qid => {
+                const title = data[`${qid}Title`];
+                const bullets = data.bullets[qid];
+                const delivs = data.deliverables[qid];
+                
+                html += `
+                    <tr class="bg-slate-100 border-b border-slate-200">
+                        <td colspan="4" class="px-4 py-2 font-black text-sky-800 text-sm uppercase tracking-wider">
+                            ${qid.toUpperCase()}: ${title}
+                        </td>
+                    </tr>
+                `;
+                
+                bullets.forEach((b, index) => {
+                    const key = `${qid}-${index}`;
+                    const d = delivs[index] || '-';
+                    const activeOwners = ownerData[key] || [];
+                    
+                    const badgesHtml = owners.map(o => {
+                        let activeClass = "";
+                        if(activeOwners.includes(o)) {
+                            if(o==='P.L') activeClass = "active-PL";
+                            if(o==='Shawn') activeClass = "active-Shawn";
+                            if(o==='Tinny') activeClass = "active-Tinny";
+                        }
+                        return `<span class="owner-badge ${activeClass} !text-[0.65rem] !px-2 !py-0.5" onclick="toggleOwner('${qid}', ${index}, '${o}', event)">${o}</span>`;
+                    }).join('');
+                    
+                    let tagsArray = tagData[key] || [];
+                    if (typeof tagsArray === 'string') {
+                        tagsArray = tagsArray.trim() ? [tagsArray] : [];
+                        tagData[key] = tagsArray; 
+                    }
+                    
+                    const tagsHtml = tagsArray.map((t, i) => `
+                        <span class="tag-pill" onclick="removeTag('${qid}', ${index}, ${i})" title="Click to remove">
+                            ${t} <span class="text-slate-400 hover:text-red-600">&times;</span>
+                        </span>
+                    `).join('');
+                    
+                    html += `
+                    <tr class="data-row border-b border-slate-100 transition-colors">
+                        <td class="col-task">
+                            <div contenteditable="true" class="editable-cell" onblur="updateTableData('${qid}', ${index}, 'bullet', this.innerText)">${b}</div>
+                        </td>
+                        <td class="col-deliv">
+                            <div contenteditable="true" class="editable-cell" onblur="updateTableData('${qid}', ${index}, 'deliverable', this.innerText)">${d}</div>
+                        </td>
+                        <td class="col-owner">
+                            <div class="flex flex-wrap gap-1">${badgesHtml}</div>
+                        </td>
+                        <td class="col-tags">
+                            <div class="flex flex-wrap gap-1 mb-1" id="tags-container-${key}">
+                                ${tagsHtml}
+                            </div>
+                            <input type="text" class="tag-input" placeholder="+ Type & Enter" onkeydown="handleTagKeydown(event, '${qid}', ${index}, this)">
+                        </td>
+                    </tr>
+                    `;
+                });
+            });
+            tbody.innerHTML = html;
+        }
+
+        // --- EXPORT LOGIC ---
+        
+        async function exportGoogleDoc() {
+            // USER INSTRUCTION: Paste your Google Apps Script Web App URL below
+            const webhookUrl = GOOGLE_WEBHOOK_URL; 
+
+            if (!webhookUrl || webhookUrl.includes("YOUR_GOOGLE_APPS_SCRIPT_URL_HERE")) {
+                alert(currentLang === 'zh' ? "請先在程式碼中填入您的 Google Apps Script Webhook URL！(第 890 行)" : "Please insert your Google Apps Script Webhook URL in the code first! (Line ~890)");
+                return;
+            }
+
+            const loading = document.getElementById('export-loading');
+            loading.innerText = currentLang === 'zh' ? "正在產生 Google 文件..." : "Sending to Google Docs...";
+            loading.style.display = 'flex';
+
+            const data = contentData[currentLang];
+            const payload = {
+                documentTitle: `${data.mainTitle.replace(/<[^>]*>/g, '')} - Action Plan`,
+                rows: []
+            };
+
+            ['q1', 'q2', 'q3', 'q4'].forEach(qid => {
+                const title = data[`${qid}Title`];
+                data.bullets[qid].forEach((b, index) => {
+                    const key = `${qid}-${index}`;
+                    const d = data.deliverables[qid][index] || '-';
+                    const activeOwners = ownerData[key] || [];
+                    let tagsArray = tagData[key] || [];
+                    if (typeof tagsArray === 'string') tagsArray = tagsArray.trim() ? [tagsArray] : [];
+
+                    payload.rows.push({
+                        quadrant: qid.toUpperCase(),
+                        title: title,
+                        activity: b,
+                        deliverable: d,
+                        owners: activeOwners.length > 0 ? activeOwners.join(', ') : '-',
+                        tags: tagsArray.length > 0 ? tagsArray.join(', ') : '-'
+                    });
+                });
+            });
+
+            try {
+                // Sending plain text prevents CORS preflight issues natively with GAS doPost
+                const response = await fetch(webhookUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8", 
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    window.open(result.url, '_blank'); 
+                } else {
+                    alert("Error generating document: " + result.error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert(currentLang === 'zh' ? "傳送失敗，請檢查網路或 Webhook 網址設定。" : "Failed to send. Please check your network or Webhook URL.");
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function preparePrintView() {
+            const container = document.getElementById('print-container');
+            const data = contentData[currentLang];
+            
+            let html = `
+                <div class="print-layout">
+                    <div class="print-header">
+                        <div style="margin-bottom:10px;">
+                             <svg width="250" height="45" viewBox="0 0 320 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
+                                <path d="M40 5 L10 55 L70 55 Z" fill="black" />
+                                <path d="M10 55 L25 30 L40 55 Z" fill="#D50017" />
+                                <text x="80" y="45" font-family="Arial, sans-serif" font-weight="900" font-size="52" fill="black" letter-spacing="-2">RLITECH</text>
+                            </svg>
+                        </div>
+                        <h1>${data.mainTitle.replace(/<[^>]*>/g, '')}</h1>
+                        <p>${data.subTitle}</p>
+                    </div>
+                    <div class="print-grid">
+            `;
+
+            ['q1', 'q2', 'q3', 'q4'].forEach(qid => {
+                let tagsHtml = "";
+                let color = "#3b82f6";
+                if(qid === 'q1') { tagsHtml = `<span class="print-tag" style="background-color: #3b82f6">Sales</span><span class="print-tag" style="background-color: #0d9488">External</span>`; color="#3b82f6"; }
+                if(qid === 'q2') { tagsHtml = `<span class="print-tag" style="background-color: #f43f5e">Marcom</span><span class="print-tag" style="background-color: #0d9488">External</span>`; color="#f43f5e"; }
+                if(qid === 'q3') { tagsHtml = `<span class="print-tag" style="background-color: #3b82f6">Sales</span><span class="print-tag" style="background-color: #6366f1">Intl</span>`; color="#6366f1"; }
+                if(qid === 'q4') { tagsHtml = `<span class="print-tag" style="background-color: #f43f5e">Marcom</span><span class="print-tag" style="background-color: #6366f1">Intl</span>`; color="#f43f5e"; }
+
+                const titleKey = `${qid}Title`;
+                const subKey = `${qid}Sub`;
+                
+                html += `
+                    <div class="print-card" style="border-left: 5px solid ${color}">
+                        <div style="margin-bottom:8px;">${tagsHtml}</div>
+                        <h2>${data[titleKey]}</h2>
+                        <p>${data[subKey]}</p>
+                        <ul>
+                            ${data.bullets[qid].map((b, index) => {
+                                const key = `${qid}-${index}`;
+                                const d = data.deliverables[qid][index] || '-';
+                                const activeOwners = ownerData[key] || [];
+                                
+                                let ownerHtml = "";
+                                if(activeOwners.length > 0) {
+                                    const badges = activeOwners.map(o => {
+                                        let c = "#e2e8f0", t = "#475569";
+                                        if(o==='P.L') { c="#eff6ff"; t="#2563eb"; }
+                                        if(o==='Shawn') { c="#f0fdfa"; t="#0d9488"; }
+                                        if(o==='Tinny') { c="#fff1f2"; t="#e11d48"; }
+                                        return `<span class="print-owner" style="background:${c}; color:${t}">${o}</span>`;
+                                    }).join('');
+                                    ownerHtml = `<div class="print-owner-row">${badges}</div>`;
+                                }
+                                
+                                return `
+                                <li>
+                                    <span style="font-weight: 800;">• ${b}</span>
+                                    <span class="print-deliv">↳ Deliverable: ${d}</span>
+                                    ${ownerHtml}
+                                </li>`
+                            }).join('')}
+                        </ul>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                    <div class="print-footer">
+                        ${data.footerCopy} - Generated on ${new Date().toLocaleDateString()}
+                    </div>
+                </div>
+            `;
+
+            // Build Table View (Page 2)
+            html += `
+                <div style="page-break-before: always; padding-top: 20px;" class="print-layout">
+                    <div class="print-header" style="border-bottom:none; margin-bottom:0;">
+                        <h2 style="font-size: 20pt; font-weight: 900; color: #0f172a; text-align: left;">Action Plan Details</h2>
+                    </div>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 35%">Key Activity</th>
+                                <th style="width: 35%">Deliverable</th>
+                                <th style="width: 15%">Owners</th>
+                                <th style="width: 15%">Tags</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            ['q1', 'q2', 'q3', 'q4'].forEach(qid => {
+                const title = data[`${qid}Title`];
+                html += `
+                    <tr>
+                        <td colspan="4" style="background-color: #e2e8f0; font-weight: bold; color: #0f172a;">
+                            ${qid.toUpperCase()}: ${title}
+                        </td>
+                    </tr>
+                `;
+
+                data.bullets[qid].forEach((b, index) => {
+                    const key = `${qid}-${index}`;
+                    const d = data.deliverables[qid][index] || '-';
+                    const activeOwners = ownerData[key] || [];
+                    
+                    let tagsArray = tagData[key] || [];
+                    if (typeof tagsArray === 'string') tagsArray = tagsArray.trim() ? [tagsArray] : [];
+                    
+                    const badgesHtml = activeOwners.length > 0 ? activeOwners.join(', ') : '-';
+                    const tagHtml = tagsArray.length > 0 ? tagsArray.map(t => `<span class="print-table-tag">${t}</span>`).join(' ') : '-';
+                    
+                    html += `
+                        <tr>
+                            <td>${b}</td>
+                            <td style="font-style: italic; color: #475569;">${d}</td>
+                            <td><b>${badgesHtml}</b></td>
+                            <td>${tagHtml}</td>
+                        </tr>
+                    `;
+                });
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function exportPNG() {
+            const loading = document.getElementById('export-loading');
+            loading.innerText = "Generating Image...";
+            loading.style.display = 'flex';
+            preparePrintView();
+            document.body.classList.add('is-printing');
+
+            setTimeout(() => {
+                const element = document.getElementById('print-container');
+                html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `2026_Strategy_Matrix_V12.0_${currentLang.toUpperCase()}.png`;
+                    link.href = canvas.toDataURL("image/png");
+                    link.click();
+                    document.body.classList.remove('is-printing');
+                    loading.style.display = 'none';
+                }).catch(err => {
+                    console.error(err);
+                    document.body.classList.remove('is-printing');
+                    loading.style.display = 'none';
+                });
+            }, 800);
+        }
+
+        function exportPDF() {
+            const loading = document.getElementById('export-loading');
+            loading.innerText = "Generating PDF...";
+            loading.style.display = 'flex';
+            preparePrintView();
+            document.body.classList.add('is-printing');
+            
+            const container = document.getElementById('print-container');
+            const layout = container.querySelector('.print-layout');
+            layout.style.zoom = 1; 
+
+            setTimeout(() => {
+                const grid = container.querySelector('.print-grid');
+                if(grid) {
+                    const totalHeight = grid.scrollHeight + 150; 
+                    const pageHeightPX = 750; 
+                    if (totalHeight > pageHeightPX) {
+                        layout.style.zoom = pageHeightPX / totalHeight;
+                    }
+                }
+
+                const opt = {
+                  margin:       10,
+                  filename:     `2026_Strategy_Matrix_V12.0_${currentLang.toUpperCase()}.pdf`,
+                  image:        { type: 'jpeg', quality: 0.98 },
+                  html2canvas:  { scale: 2, useCORS: true, windowWidth: 1200 },
+                  jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+                };
+
+                html2pdf().set(opt).from(container).save().then(() => {
+                    document.body.classList.remove('is-printing');
+                    loading.style.display = 'none';
+                    layout.style.zoom = 1; 
+                });
+            }, 800);
+        }
+
+        function exportCSV() {
+            const data = contentData[currentLang];
+            const header = ["Quadrant", "Title", "Subtitle", "Key Activities", "Deliverables", "Owners", "Tags"];
+            const rows = ['q1', 'q2', 'q3', 'q4'].map(qid => {
+                const title = data[`${qid}Title`];
+                const sub = data[`${qid}Sub`];
+                const bullets = data.bullets[qid].map(b => `• ${b.replace(/"/g, '""')}`).join('\n'); 
+                const delivs = data.deliverables[qid].map(d => `• ${d.replace(/"/g, '""')}`).join('\n');
+                
+                const ownersList = data.bullets[qid].map((b, index) => {
+                     const key = `${qid}-${index}`;
+                     const activeOwners = ownerData[key] || [];
+                     return activeOwners.length > 0 ? `[${activeOwners.join(', ')}]` : `[-]`;
+                }).join('\n');
+
+                const tagsList = data.bullets[qid].map((b, index) => {
+                     const key = `${qid}-${index}`;
+                     let tagsArray = tagData[key] || [];
+                     if (typeof tagsArray === 'string') tagsArray = tagsArray.trim() ? [tagsArray] : [];
+                     return tagsArray.length > 0 ? `[${tagsArray.join(', ')}]` : `[-]`;
+                }).join('\n');
+                
+                return [qid.toUpperCase(), `"${title.replace(/"/g, '""')}"`, `"${sub.replace(/"/g, '""')}"`, `"${bullets}"`, `"${delivs}"`, `"${ownersList}"`, `"${tagsList}"`]; 
+            });
+
+            const csvContent = [header.join(","), ...rows.map(r => r.join(","))].join("\n");
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `2026_Strategy_Matrix_V12.0_${currentLang.toUpperCase()}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // --- UX Mod: Overlay Scaling View ---
+
+        function expandQuadrant(qid) {
+            currentEditTarget = qid;
+            currentEditType = 'quadrant';
+            isEditing = false;
+
+            const popup = document.getElementById('detail-popup');
+            const backdrop = document.getElementById('overlay-backdrop');
+            
+            popup.classList.remove('expanded-edit', 'small-modal'); 
+            document.getElementById('popup-edit-ui').style.display = 'none';
+            document.getElementById('btn-edit-mode').style.display = 'inline-block';
+            
+            let tagsHtml = "";
+            if(qid === 'q1') tagsHtml = `<span class="tag tag-sales">Sales</span><span class="tag tag-external">External</span>`;
+            if(qid === 'q2') tagsHtml = `<span class="tag tag-marcom">Marcom</span><span class="tag tag-external">External</span>`;
+            if(qid === 'q3') tagsHtml = `<span class="tag tag-sales">Sales</span><span class="tag tag-internal">Internal</span>`;
+            if(qid === 'q4') tagsHtml = `<span class="tag tag-marcom">Marcom</span><span class="tag tag-internal">Internal</span>`;
+            document.getElementById('popup-tag-container').innerHTML = tagsHtml;
+
+            renderOverlayContent(qid);
+
+            backdrop.style.display = 'block';
+            popup.style.display = 'block';
+            
+            setTimeout(() => {
+                backdrop.style.opacity = '1';
+                popup.classList.add('active');
+            }, 10);
+        }
+
+        function renderOverlayContent(qid) {
+            const data = contentData[currentLang];
+            const title = data[`${qid}Title`];
+            const sub = data[`${qid}Sub`];
+            const content = document.getElementById('popup-content');
+            
+            content.style.display = 'block';
+            content.innerHTML = `
+                <h2 class="scaled-title">${title}</h2>
+                <p class="scaled-sub">${sub}</p>
+                <div class="scaled-bullet-container">
+                    <div class="grid grid-cols-2 gap-6 mb-3 border-b-2 border-slate-200 pb-2">
+                        <h3 class="font-bold text-slate-500 uppercase tracking-wider text-xs">Key Activities & Assignments</h3>
+                        <h3 class="font-bold text-slate-500 uppercase tracking-wider text-xs">Deliverables</h3>
+                    </div>
+                    <ul class="space-y-0">
+                        ${data.bullets[qid].map((b, index) => {
+                            const key = `${qid}-${index}`;
+                            const d = data.deliverables[qid][index] || '-';
+                            const activeOwners = ownerData[key] || [];
+                            
+                            const togglesHtml = owners.map(o => {
+                                let activeClass = "";
+                                if(activeOwners.includes(o)) {
+                                    if(o==='P.L') activeClass = "active-PL";
+                                    if(o==='Shawn') activeClass = "active-Shawn";
+                                    if(o==='Tinny') activeClass = "active-Tinny";
+                                }
+                                return `<span class="owner-badge ${activeClass}" style="font-size:0.75rem; padding: 3px 10px;" onclick="toggleOwner('${qid}', ${index}, '${o}', event)">${o}</span>`;
+                            }).join('');
+
+                            return `
+                                <li class="grid grid-cols-2 gap-6 items-start border-b border-slate-200 py-4 last:border-0">
+                                    <div class="flex flex-col pr-4 border-r border-slate-200 h-full">
+                                        <div class="scaled-bullet flex-grow">${b}</div>
+                                        <div class="owner-row mt-3 gap-2">${togglesHtml}</div>
+                                    </div>
+                                    <div class="flex items-center h-full">
+                                        <div class="text-sm font-bold text-slate-700 py-2 px-3 bg-white border border-slate-200 rounded-md shadow-sm w-full leading-relaxed">→ ${d}</div>
+                                    </div>
+                                </li>
+                            `;
+                        }).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        function openEditModal(targetId, event) {
+            if(event) event.stopPropagation(); 
+            
+            currentEditTarget = targetId;
+            currentEditType = targetId.startsWith('axis') ? 'axis' : 'title';
+            isEditing = false;
+
+            const popup = document.getElementById('detail-popup');
+            const backdrop = document.getElementById('overlay-backdrop');
+            
+            popup.classList.remove('expanded-edit'); 
+            popup.classList.add('small-modal');
+            document.getElementById('popup-edit-ui').style.display = 'none';
+            document.getElementById('btn-edit-mode').style.display = 'inline-block';
+            
+            const label = contentData[currentLang][targetId];
+            document.getElementById('popup-tag-container').innerHTML = `<span class="tag" style="background:#475569">Editing Field</span>`;
+            document.getElementById('popup-content').style.display = 'block';
+            document.getElementById('popup-content').innerHTML = `
+                <h2 class="text-2xl font-bold mb-4 text-sky-900 text-center">Current Value</h2>
+                <div class="p-4 bg-gray-50 rounded-xl border-2 border-gray-200 text-center shadow-inner">
+                    <p class="text-xl font-bold text-gray-800 break-words">${label}</p>
+                </div>
+            `;
+
+            backdrop.style.display = 'block';
+            popup.style.display = 'block';
+            setTimeout(() => { backdrop.style.opacity = '1'; popup.classList.add('active'); }, 10);
+        }
+
+        function forceClose() {
+            if (isEditing) { performSave(); }
+            isEditing = false;
+            
+            const popup = document.getElementById('detail-popup');
+            const backdrop = document.getElementById('overlay-backdrop');
+            
+            popup.classList.remove('active');
+            backdrop.style.opacity = '0';
+            
+            setTimeout(() => {
+                popup.style.display = 'none';
+                backdrop.style.display = 'none';
+                popup.classList.remove('small-modal', 'expanded-edit');
+                currentEditTarget = null;
+            }, 300); 
+        }
+
+        function toggleEditMode() {
+            if (!currentEditTarget) return;
+            isEditing = true;
+            
+            const popup = document.getElementById('detail-popup');
+            popup.classList.remove('small-modal');
+            popup.classList.add('expanded-edit');
+            
+            document.getElementById('popup-content').style.display = 'none';
+            document.getElementById('btn-edit-mode').style.display = 'none';
+            document.getElementById('popup-edit-ui').style.display = 'block';
+            document.getElementById('save-status').innerText = "";
+
+            originalSessionData = JSON.parse(JSON.stringify(contentData));
+
+            if (currentEditType === 'quadrant') {
+                document.getElementById('edit-helper-text').innerText = "Edit items line by line. Activity 1 matches Deliverable 1.";
+                
+                document.getElementById('edit-textarea-en').value = contentData.en.bullets[currentEditTarget].join('\n');
+                document.getElementById('edit-textarea-zh').value = contentData.zh.bullets[currentEditTarget].join('\n');
+                
+                document.getElementById('edit-deliverables-en').value = contentData.en.deliverables[currentEditTarget].join('\n');
+                document.getElementById('edit-deliverables-zh').value = contentData.zh.deliverables[currentEditTarget].join('\n');
+                
+                document.getElementById('edit-title-en').value = contentData.en[`${currentEditTarget}Title`];
+                document.getElementById('edit-sub-en').value = contentData.en[`${currentEditTarget}Sub`];
+                document.getElementById('edit-title-zh').value = contentData.zh[`${currentEditTarget}Title`];
+                document.getElementById('edit-sub-zh').value = contentData.zh[`${currentEditTarget}Sub`];
+                
+                document.querySelectorAll('.edit-input, .edit-input-sub, #edit-deliverables-en, #edit-deliverables-zh').forEach(el => el.style.display = 'block');
+                document.querySelectorAll('label').forEach(el => el.style.display = 'block');
+                
+            } else {
+                document.getElementById('edit-helper-text').innerText = "Update the title or axis label text.";
+                
+                document.getElementById('edit-textarea-en').value = contentData.en[currentEditTarget];
+                document.getElementById('edit-textarea-zh').value = contentData.zh[currentEditTarget];
+                
+                document.querySelectorAll('.edit-input, .edit-input-sub, #edit-deliverables-en, #edit-deliverables-zh').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('label:not(.auto-sync-label)').forEach(el => el.style.display = 'none');
+            }
+        }
+
+        async function triggerTranslation(src, tgt) {
+            const statusEl = document.getElementById('save-status');
+            statusEl.innerText = "Translating...";
+            const pair = `${src === 'en' ? 'en' : 'zh-TW'}|${tgt === 'en' ? 'en' : 'zh-TW'}`;
+            
+            try {
+                if(currentEditType === 'quadrant') {
+                     const titleSrc = document.getElementById(`edit-title-${src}`).value;
+                     const subSrc = document.getElementById(`edit-sub-${src}`).value;
+                     const actSrc = document.getElementById(`edit-textarea-${src}`).value;
+                     const delivSrc = document.getElementById(`edit-deliverables-${src}`).value;
+
+                     if(titleSrc) document.getElementById(`edit-title-${tgt}`).value = await fetchTrans(titleSrc, pair);
+                     if(subSrc) document.getElementById(`edit-sub-${tgt}`).value = await fetchTrans(subSrc, pair);
+                     if(actSrc) document.getElementById(`edit-textarea-${tgt}`).value = await fetchTrans(actSrc, pair);
+                     if(delivSrc) document.getElementById(`edit-deliverables-${tgt}`).value = await fetchTrans(delivSrc, pair);
+                } else {
+                     const bodySrc = document.getElementById(`edit-textarea-${src}`).value;
+                     if(bodySrc) document.getElementById(`edit-textarea-${tgt}`).value = await fetchTrans(bodySrc, pair);
+                }
+                statusEl.innerText = "Translated & Saved";
+                performSave();
+            } catch(e) {
+                statusEl.innerText = "Error (Rate Limit)";
+                performSave();
+            }
+        }
+        
+        async function fetchTrans(text, pair) {
+            const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${pair}`);
+            const data = await res.json();
+            return data.responseData?.translatedText || text;
+        }
+
+        function handleInput(src) { 
+            clearTimeout(autoSaveTimeout); 
+            autoSaveTimeout = setTimeout(() => performSave(), 800); 
+            
+            if(document.getElementById('auto-translate-check').checked) {
+                clearTimeout(translationTimeout);
+                translationTimeout = setTimeout(() => { triggerTranslation(src, src==='en'?'zh':'en'); }, 1500);
+            }
+        }
+
+        function performSave() {
+             if (!currentEditTarget) return;
+             const statusEl = document.getElementById('save-status');
+             statusEl.innerText = "Saving...";
+             
+             if (currentEditType === 'quadrant') {
+                 contentData.en[`${currentEditTarget}Title`] = document.getElementById('edit-title-en').value;
+                 contentData.zh[`${currentEditTarget}Title`] = document.getElementById('edit-title-zh').value;
+                 contentData.en[`${currentEditTarget}Sub`] = document.getElementById('edit-sub-en').value;
+                 contentData.zh[`${currentEditTarget}Sub`] = document.getElementById('edit-sub-zh').value;
+                 
+                 const enAct = document.getElementById('edit-textarea-en').value.split('\n').filter(l => l.trim());
+                 const zhAct = document.getElementById('edit-textarea-zh').value.split('\n').filter(l => l.trim());
+                 const enDeliv = document.getElementById('edit-deliverables-en').value.split('\n').filter(l => l.trim());
+                 const zhDeliv = document.getElementById('edit-deliverables-zh').value.split('\n').filter(l => l.trim());
+
+                 contentData.en.bullets[currentEditTarget] = enAct.length ? enAct : ["-"];
+                 contentData.zh.bullets[currentEditTarget] = zhAct.length ? zhAct : ["-"];
+                 contentData.en.deliverables[currentEditTarget] = enDeliv;
+                 contentData.zh.deliverables[currentEditTarget] = zhDeliv;
+
+             } else {
+                 contentData.en[currentEditTarget] = document.getElementById('edit-textarea-en').value || "-";
+                 contentData.zh[currentEditTarget] = document.getElementById('edit-textarea-zh').value || "-";
+             }
+             saveData();
+             renderContent();
+             statusEl.innerText = "Saved.";
+        }
+
+        function revertEdit() {
+            if (!currentEditTarget || !originalSessionData) return;
+            contentData = JSON.parse(JSON.stringify(originalSessionData));
+            saveData();
+            renderContent();
+            forceClose();
+        }
+
+        function resetToDefault() {
+            if (!currentEditTarget) return;
+            if (confirm("Reset to original default text?")) {
+                 if (currentEditType === 'quadrant') {
+                     contentData.en.bullets[currentEditTarget] = [...defaultContentData.en.bullets[currentEditTarget]];
+                     contentData.zh.bullets[currentEditTarget] = [...defaultContentData.zh.bullets[currentEditTarget]];
+                     contentData.en.deliverables[currentEditTarget] = [...defaultContentData.en.deliverables[currentEditTarget]];
+                     contentData.zh.deliverables[currentEditTarget] = [...defaultContentData.zh.deliverables[currentEditTarget]];
+                 } else {
+                     contentData.en[currentEditTarget] = defaultContentData.en[currentEditTarget];
+                     contentData.zh[currentEditTarget] = defaultContentData.zh[currentEditTarget];
+                 }
+                 saveData();
+                 renderContent();
+                 forceClose();
+            }
+        }
+
+        renderContent();
+
+    </script>
+</body>
+</html>
